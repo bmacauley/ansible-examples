@@ -1,0 +1,38 @@
+# {{ ansible_managed }}
+# Manual customization of this file is not recommended.
+
+
+server {
+  listen {{ nginx_listen }};
+{% if nginx_ssl %}
+  listen {{ nginx_listen_ssl }} ssl spdy;
+{% endif %}
+  server_name {{ nginx_server_name }};
+  root {{ nginx_root_path }};
+
+
+{% if nginx_error_pages is iterable %}
+{% for key in nginx_error_pages %}
+  error_page {{ key.error_code }} /{{ key.error_page }};
+{% endfor %}
+{% endif %}
+
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+
+  {{ nginx_extra_locations|indent(2) }}
+
+{% if nginx_assets_enabled %}
+  location {{ nginx_assets_regex }} {
+    gzip_static on;
+    
+    expires 1y;
+    add_header Cache-Control public;
+    add_header Last-Modified "";
+    add_header ETag "";
+  }
+{% endif %}
+
+
+}

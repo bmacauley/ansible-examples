@@ -1,0 +1,41 @@
+---
+
+- name: Install nginx
+  apt: pkg=nginx state=latest update_cache=true cache_valid_time={{ apt_cache_valid_time }}
+
+- name: Remove the nginx default site
+  file: path=/etc/nginx/sites-{{ item }}/default state=absent
+  with_items:
+    - enabled
+    - available
+  notify:
+    - restart nginx
+
+- name: Configure nginx
+  template: src=nginx_conf.j2 dest=/etc/nginx/nginx.conf group=root owner=root
+  notify:
+    - reload nginx
+
+- name: Configure nginx sites-available
+  template: src=nginx_sites-available.conf.j2 dest=/etc/nginx/sites-available/{{ nginx_server_name }} group=root owner=root
+  notify:
+    - reload nginx
+
+- name: Ensure sites-available is symlinked to sites-enabled
+  file: src=/etc/nginx/sites-available/{{ nginx_server_name }} dest=/etc/nginx/sites-enabled/{{ nginx_website_name }} state=link
+  notify:
+    - restart nginx
+
+- name: Create website directory
+  file: path=/var/www/{{ nginx_server_name }}/public state=directory
+
+- name: Create an HTML file
+  template: src=index.html.j2 dest=/var/www/{{ nginx_server_name }}/public/index.html group=root owner=root 
+  notify:
+    - reload nginx
+
+- name: ensure nginx starts on a fresh reboot
+  service: name=nginx state=started enabled=yes
+
+
+
