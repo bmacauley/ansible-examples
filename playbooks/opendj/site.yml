@@ -1,0 +1,11 @@
+---
+
+# file: site.yml
+- hosts: ldap.example.com
+  roles:
+    - ansible-role-java
+    - ans-opendj
+
+
+
+

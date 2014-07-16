@@ -3,14 +3,26 @@
 - name: install unzip
   apt: name=unzip update_cache=yes cache_valid_time=3600
 
-- name: Download opendj
-  get_url: url={{opendj_url}} dest={{download_dir}}/{{opendj_zip}}
+# note: this is a nightly build not a production build
+# - name: Download opendj
+#   get_url: url={{opendj_url}} dest={{download_dir}}/{{opendj_zip}}
 
-- name: create install root
-  file: path={{install_root}} state=directory
+# - name: create install root
+#   file: path={{install_root}} state=directory
 
-- name: unpack opendj
-  command: chdir={{install_root}} creates={{install_root}}/opendj unzip {{ download_dir }}/{{ opendj_zip }}
+# - name: unpack opendj
+#   command: chdir={{install_root}} creates={{install_root}}/opendj unzip {{ download_dir }}/{{ opendj_zip }}
+
+- name: copy opendj deb to server
+  copy: src=opendj_2.6.0-1_all.deb dest=/tmp/opendj_2.6.0-1_all.deb
+
+- name: install opendj deb
+  apt: deb=/tmp/opendj_2.6.0-1_all.deb
+
+
+- name: copy opendj props file
+  template: src=opendj.properties dest=/tmp/opendj.properties 
+
 
 - name: copy opendj props file
   template: src=opendj.properties dest=/tmp/opendj.properties 
@@ -18,8 +30,8 @@
 - name: setup opendj
   command: creates={{install_root}}/opendj/config {{install_root}}/opendj/setup --cli --propertiesFilePath /tmp/opendj.properties --acceptLicense --no-prompt 
 
-- name: Create rc script
-  command: "{{install_root}}/opendj/bin/create-rc-script -f /etc/init.d/{{opendj_service_name}} -u root"
+# - name: Create rc script
+#   command: "{{install_root}}/opendj/bin/create-rc-script -f /etc/init.d/{{opendj_service_name}} -u root"
 
 - name: Change the ownership on the files so the fr user can execute ldap commands
   file: path={{install_root}}/opendj state=directory owner={{fr_user}} recurse=yes
